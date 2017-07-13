@@ -1,0 +1,5 @@
+.idea/
+presentation
+build
+.DS_Store
+node_modules
