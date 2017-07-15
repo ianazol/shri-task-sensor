@@ -1,19 +1,27 @@
 ym.modules.define('shri2017.imageViewer.EventManager', [
-], function (provide) {
+    'shri2017.imageViewer.PointerCollection'
+], function (provide, PointerCollection) {
 
     var EVENTS = {
         mousedown: 'start',
         mousemove: 'move',
         mouseup: 'end',
+
         touchstart: 'start',
         touchmove: 'move',
         touchend: 'end',
-        touchcancel: 'end'
+        touchcancel: 'end',
+
+        pointerdown: 'start',
+        pointermove: 'move',
+        pointerup: 'end',
+        pointercancel: 'end'
     };
 
     function EventManager(elem, callback) {
         this._elem = elem;
         this._callback = callback;
+        this._pointers = null;
         this._setupListeners();
     }
 
@@ -25,14 +33,21 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
         _setupListeners: function () {
             this._mouseListener = this._mouseEventHandler.bind(this);
             this._touchListener = this._touchEventHandler.bind(this);
+            this._pointerListener = this._pointerEventHandler.bind(this);
+
+            if (this._pointerEventsEnabled()) {
+                this._addEventListeners('pointerdown', this._elem, this._pointerListener);
+            } else {
+                this._addEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
+            }
             this._addEventListeners('mousedown', this._elem, this._mouseListener);
-            this._addEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
         },
 
         _teardownListeners: function () {
             this._removeEventListeners('mousedown', this._elem, this._mouseListener);
             this._removeEventListeners('mousemove mouseup', document.documentElement, this._mouseListener);
             this._removeEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
+            this._removeEventListeners('pointerdown pointermove pointerup pointercancel', this._elem, this._pointerListener);
         },
 
         _addEventListeners: function (types, elem, callback) {
@@ -45,6 +60,10 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             types.split(' ').forEach(function (type) {
                 elem.removeEventListener(type, callback);
             }, this);
+        },
+
+        _pointerEventsEnabled: function () {
+            return window.PointerEvent;
         },
 
         _mouseEventHandler: function (event) {
@@ -101,6 +120,77 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                 targetPoint: targetPoint,
                 distance: distance
             });
+        },
+
+        _pointerEventHandler: function (event) {
+            event.preventDefault();
+
+            if (!this._pointers) {
+                this._pointers = new PointerCollection();
+            }
+
+            if (event.type === 'pointerdown') {
+                this._onPointerDown(event);
+            } else if (event.type === 'pointermove') {
+                this._onPointerMove(event);
+            } else if (event.type === 'pointerup' || event.type === 'pointercancel') {
+                this._onPointerUp(event);
+            }
+
+            var distance = 1;
+            var targetPoint, firstPoint, secondPoint;
+            var pointersCount = this._pointers.getPointersCount();
+            var elemOffset = this._calculateElementOffset(this._elem);
+
+            if (pointersCount > 1) {
+                firstPoint = this._pointers.getPointer(0);
+                secondPoint = this._pointers.getPointer(1);
+                targetPoint = this._calculateTargetPoint(firstPoint, secondPoint);
+                distance = this._calculateDistance(firstPoint, secondPoint);
+            } else {
+                firstPoint = pointersCount === 0 ? event : this._pointers.getPointer(0);
+                targetPoint = {
+                    x: firstPoint.clientX,
+                    y: firstPoint.clientY
+                };
+            }
+
+            targetPoint.x -= elemOffset.x;
+            targetPoint.y -= elemOffset.y;
+
+            this._callback({
+                type: EVENTS[event.type],
+                targetPoint: targetPoint,
+                distance: distance
+            });
+        },
+
+        _onPointerDown: function (event) {
+            if (!this._pointers.exists(event)) {
+                this._pointers.add(event);
+            }
+
+            if (this._pointers.getPointersCount() === 1) {
+                this._addEventListeners('pointermove pointerup pointercancel', document.documentElement, this._pointerListener);
+                this._elem.style.touchAction = 'none';
+            }
+        },
+
+        _onPointerMove: function (event) {
+            if (this._pointers.exists(event)) {
+                this._pointers.update(event);
+            }
+        },
+
+        _onPointerUp: function (event) {
+            if (this._pointers.exists(event)) {
+                this._pointers.remove(event);
+            }
+
+            if (this._pointers.getPointersCount() === 0)  {
+                this._removeEventListeners('pointermove pointerup pointercancel', document.documentElement, this._pointerListener);
+                this._elem.style.touchAction = '';
+            }
         },
 
         _calculateTargetPoint: function (firstTouch, secondTouch) {
