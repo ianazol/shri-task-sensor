@@ -15,7 +15,9 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
         pointerdown: 'start',
         pointermove: 'move',
         pointerup: 'end',
-        pointercancel: 'end'
+        pointercancel: 'end',
+
+        wheel: 'wheel'
     };
 
     function EventManager(elem, callback) {
@@ -34,6 +36,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             this._mouseListener = this._mouseEventHandler.bind(this);
             this._touchListener = this._touchEventHandler.bind(this);
             this._pointerListener = this._pointerEventHandler.bind(this);
+            this._wheelListener = this._wheelEventHandler.bind(this);
 
             if (this._pointerEventsEnabled()) {
                 this._addEventListeners('pointerdown', this._elem, this._pointerListener);
@@ -41,6 +44,7 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                 this._addEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
             }
             this._addEventListeners('mousedown', this._elem, this._mouseListener);
+            this._addEventListeners('wheel', this._elem, this._wheelListener);
         },
 
         _teardownListeners: function () {
@@ -84,6 +88,22 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
                     y: event.clientY - elemOffset.y
                 },
                 distance: 1
+            });
+        },
+
+        _wheelEventHandler: function (event) {
+            event.preventDefault();
+
+            var elemOffset = this._calculateElementOffset(this._elem);
+            var distance = event.deltaY > 0 ? 1 : -1;
+
+            this._callback({
+                type: EVENTS[event.type],
+                targetPoint: {
+                    x: event.clientX - elemOffset.x,
+                    y: event.clientY - elemOffset.y
+                },
+                distance: distance
             });
         },
 

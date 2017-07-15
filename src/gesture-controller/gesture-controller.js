@@ -3,6 +3,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
 ], function (provide, EventManager) {
 
     var DBL_TAB_STEP = 0.2;
+    var WHEEL_SCALE_STEP = 0.01;
 
     var Controller = function (view) {
         this._view = view;
@@ -35,6 +36,11 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                 return;
             }
 
+            if (event.type === 'wheel') {
+                this._processWheel(event);
+                return;
+            }
+
             if (event.type === 'move') {
                 if (event.distance > 1 && event.distance !== this._initEvent.distance) {
                     this._processMultitouch(event);
@@ -58,6 +64,14 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             this._scale(
                 event.targetPoint,
                 this._initState.scale * (event.distance / this._initEvent.distance)
+            );
+        },
+
+        _processWheel: function (event) {
+            var state = this._view.getState();
+            this._scale(
+                event.targetPoint,
+                state.scale + (event.distance * WHEEL_SCALE_STEP)
             );
         },
 
