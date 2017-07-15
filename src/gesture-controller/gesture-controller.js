@@ -14,6 +14,8 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             this._eventHandler.bind(this)
         );
         this._lastEventTypes = '';
+        this._dblClickStarted = false;
+        this._clickCounter = 0;
     };
 
     Object.assign(Controller.prototype, {
@@ -24,18 +26,24 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
         _eventHandler: function (event) {
             var state = this._view.getState();
 
-            // dblclick
-            if (!this._lastEventTypes) {
-                setTimeout(function () {
-                    this._lastEventTypes = '';
-                }.bind(this), 500);
+            // dbclick
+            // в предыдущей реализации на сенсорном устройстве с поддержкой pointerEvents
+            // между start и end приходили события move
+            // и фактически жест dbltap никогда не срабатывал
+            if (event.type === 'start' && !this._dblClickStarted) {
+                this._dblClickStarted = true;
+                setTimeout(this._endDblClick.bind(this), 400);
             }
-            this._lastEventTypes += ' ' + event.type;
 
-            if (this._lastEventTypes.indexOf('start end start end') > -1) {
-                this._lastEventTypes = '';
-                this._processDbltab(event);
-                return;
+            if (this._dblClickStarted) {
+                if (event.type === 'end') {
+                    this._clickCounter++;
+                }
+                if (this._clickCounter === 2) {
+                    this._endDblClick();
+                    this._processDbltab(event);
+                    return;
+                }
             }
 
             if (event.type === 'wheel') {
@@ -116,6 +124,11 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             // Устанавливаем масштаб и угол наклона
             state.scale = newScale;
             this._view.setState(state);
+        },
+
+        _endDblClick: function () {
+            this._clickCounter = 0;
+            this._dblClickStarted = false;
         }
     });
 
