@@ -3,7 +3,9 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
 ], function (provide, EventManager) {
 
     var DBL_TAB_STEP = 0.2;
-    var WHEEL_SCALE_STEP = 0.01;
+    var WHEEL_SCALE_STEP = 0.005;
+    var MAX_SCALE = 2;
+    var MIN_SCALE = 0.01;
 
     var Controller = function (view) {
         this._view = view;
@@ -98,6 +100,12 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             // Размер изображения с учетом нового уровня масштаба
             var newImageWidth = imageSize.width * newScale;
             var newImageHeight = imageSize.height * newScale;
+            // Проверяем на допустимое значение масштаба
+            newScale = newScale < MIN_SCALE ? MIN_SCALE : newScale;
+            newScale = newScale > MAX_SCALE ? MAX_SCALE : newScale;
+            if (newScale === state.scale) {
+                return;
+            }
             // Рассчитываем новую позицию с учетом уровня масштаба
             // и относительного положения прикосновения
             state.positionX += originX - (newImageWidth * mx);
