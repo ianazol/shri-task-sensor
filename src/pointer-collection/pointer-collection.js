@@ -1,11 +1,12 @@
 ym.modules.define('shri2017.imageViewer.PointerCollection', [
-], function (provide) {
+    'util.extend'
+], function (provide, extend) {
 
     var PointerCollection = function () {
         this._pointers = {};
     };
 
-    Object.assign(PointerCollection.prototype, {
+    extend(PointerCollection.prototype, {
         add: function (event) {
             this._pointers[event.pointerId] = event;
         },
