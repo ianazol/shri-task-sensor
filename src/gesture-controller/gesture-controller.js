@@ -3,9 +3,10 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
 ], function (provide, EventManager) {
 
     var DBL_TAB_STEP = 0.2;
+    var ONE_TOUCH_ZOOM_STEP = 0.01;
     var WHEEL_SCALE_STEP = 0.005;
     var MAX_SCALE = 2;
-    var MIN_SCALE = 0.01;
+    var MIN_SCALE = 0.05;
 
     var Controller = function (view) {
         this._view = view;
@@ -15,6 +16,8 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
         );
         this._lastEventTypes = '';
         this._dblClickStarted = false;
+        this._oneAndHalfClick = false;
+        this._oneTouchZoomStarted = false;
         this._clickCounter = 0;
     };
 
@@ -29,7 +32,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             // dbclick
             // в предыдущей реализации на сенсорном устройстве с поддержкой pointerEvents
             // между start и end приходили события move
-            // и фактически жест dbltap никогда не срабатывал
+            // и фактически жест dbltab никогда не срабатывал
             if (event.type === 'start' && !this._dblClickStarted) {
                 this._dblClickStarted = true;
                 setTimeout(this._endDblClick.bind(this), 400);
@@ -43,6 +46,39 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                     this._endDblClick();
                     this._processDbltab(event);
                     return;
+                }
+            }
+
+            // oneTouchZoom
+            if (event.pointerType === 'touch') {
+                if (event.type === 'start' && this._clickCounter === 1) {
+                    this._lastEvent = this._initEvent = event;
+                    this._oneAndHalfClick = true;
+
+                    setTimeout(function() {
+                        this._oneAndHalfClick = false;
+                    }.bind(this), 400);
+                }
+
+                // т.к на сенсорных устройствах между start и end при dbltab могут приходить move
+                // проверяем на сколько сместился указатель.
+                // Если больше, чем на 5 единиц, то признаем,
+                // что это намеренный жест
+                if (event.type === 'move' && this._oneAndHalfClick && !this._oneTouchZoomStarted) {
+                    var diff = event.targetPoint.y - this._lastEvent.targetPoint.y;
+                    if (Math.abs(diff) > 5) {
+                        this._oneTouchZoomStarted = true;
+                    }
+                }
+
+                if (this._oneTouchZoomStarted) {
+                    if (event.type === 'end') {
+                        this._oneTouchZoomStarted = false;
+                    } else if (event.type === 'move') {
+                        this._processOneTouchZoom(event);
+                        this._lastEvent = event;
+                        return;
+                    }
                 }
             }
 
@@ -82,6 +118,17 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             this._scale(
                 event.targetPoint,
                 state.scale + (event.distance * WHEEL_SCALE_STEP)
+            );
+        },
+
+        _processOneTouchZoom: function (event) {
+            var state = this._view.getState();
+            var diff = event.targetPoint.y - this._lastEvent.targetPoint.y;
+            var direction = (diff > 0) ? 1 : -1;
+
+            this._scale(
+                this._initEvent.targetPoint,
+                state.scale + (direction * ONE_TOUCH_ZOOM_STEP)
             );
         },
 
