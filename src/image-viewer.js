@@ -26,7 +26,7 @@ ym.modules.define('shri2017.ImageViewer', [
                 throw new Error('Elem parameter is required');
             }
 
-            return Object.assign({
+            return extend({
                 size: {
                     width: 800,
                     height: 600
