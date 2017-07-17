@@ -3,7 +3,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
     'util.extend'
 ], function (provide, EventManager, extend) {
 
-    var DBL_TAB_STEP = 0.2;
+    var DBL_TAP_STEP = 0.2;
     var ONE_TOUCH_ZOOM_STEP = 0.01;
     var WHEEL_SCALE_STEP = 0.005;
     var MAX_SCALE = 2;
@@ -15,7 +15,6 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             this._view.getElement(),
             this._eventHandler.bind(this)
         );
-        this._lastEventTypes = '';
         this._dblClickStarted = false;
         this._oneAndHalfClick = false;
         this._oneTouchZoomStarted = false;
@@ -28,12 +27,10 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
         },
 
         _eventHandler: function (event) {
-            var state = this._view.getState();
-
             // dbclick
             // в предыдущей реализации на сенсорном устройстве с поддержкой pointerEvents
             // между start и end приходили события move
-            // и фактически жест dbltab никогда не срабатывал
+            // и фактически жест dbltap никогда не срабатывал
             if (event.type === 'start' && !this._dblClickStarted) {
                 this._dblClickStarted = true;
                 setTimeout(this._endDblClick.bind(this), 400);
@@ -45,7 +42,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                 }
                 if (this._clickCounter === 2) {
                     this._endDblClick();
-                    this._processDbltab(event);
+                    this._processDbltap(event);
                     return;
                 }
             }
@@ -61,7 +58,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                     }.bind(this), 400);
                 }
 
-                // т.к на сенсорных устройствах между start и end при dbltab могут приходить move
+                // т.к на сенсорных устройствах между start и end при dbltap могут приходить move
                 // проверяем на сколько сместился указатель.
                 // Если больше, чем на 5 единиц, то признаем,
                 // что это намеренный жест
@@ -133,11 +130,11 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             );
         },
 
-        _processDbltab: function (event) {
+        _processDbltap: function (event) {
             var state = this._view.getState();
             this._scale(
                 event.targetPoint,
-                state.scale + DBL_TAB_STEP
+                state.scale + DBL_TAP_STEP
             );
         },
 
