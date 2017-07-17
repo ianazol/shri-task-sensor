@@ -1,6 +1,7 @@
 ym.modules.define('shri2017.imageViewer.PointerCollection', [
-    'util.extend'
-], function (provide, extend) {
+    'util.extend',
+    'util.objectKeys'
+], function (provide, extend, objectKeys) {
 
     var PointerCollection = function () {
         this._pointers = {};
@@ -24,11 +25,11 @@ ym.modules.define('shri2017.imageViewer.PointerCollection', [
         },
 
         getPointersCount: function () {
-            return Object.keys(this._pointers).length;
+            return objectKeys(this._pointers).length;
         },
 
         getPointer: function (index) {
-            var pointersId = Object.keys(this._pointers);
+            var pointersId = objectKeys(this._pointers);
             return this._pointers[pointersId[index]];
         }
     });
