@@ -42,6 +42,7 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                 }
                 if (this._clickCounter === 2) {
                     this._endDblClick();
+                    this._oneAndHalfClick = false;
                     this._processDbltap(event);
                     return;
                 }
@@ -52,10 +53,6 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                 if (event.type === 'start' && this._clickCounter === 1) {
                     this._lastEvent = this._initEvent = event;
                     this._oneAndHalfClick = true;
-
-                    setTimeout(function() {
-                        this._oneAndHalfClick = false;
-                    }.bind(this), 400);
                 }
 
                 // т.к на сенсорных устройствах между start и end при dbltap могут приходить move
@@ -72,7 +69,10 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                 if (this._oneTouchZoomStarted) {
                     if (event.type === 'end') {
                         this._oneTouchZoomStarted = false;
-                    } else if (event.type === 'move') {
+                        this._oneAndHalfClick = false;
+                    }
+
+                    if (event.type === 'move') {
                         this._processOneTouchZoom(event);
                         this._lastEvent = event;
                         return;
