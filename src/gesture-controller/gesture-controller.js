@@ -55,21 +55,27 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
                     this._oneAndHalfClick = true;
                 }
 
-                // т.к на сенсорных устройствах между start и end при dbltap могут приходить move
-                // проверяем на сколько сместился указатель.
-                // Если больше, чем на 5 единиц, то признаем,
-                // что это намеренный жест
-                if (event.type === 'move' && this._oneAndHalfClick && !this._oneTouchZoomStarted) {
-                    var diff = event.targetPoint.y - this._lastEvent.targetPoint.y;
-                    if (Math.abs(diff) > 5) {
-                        this._oneTouchZoomStarted = true;
+                // отловлен полуторный тап
+                if (this._oneAndHalfClick) {
+                    if (event.type === 'end') {
+                        this._oneAndHalfClick = false;
+                    }
+
+                    // т.к на сенсорных устройствах между start и end при dbltap могут приходить move
+                    // проверяем на сколько сместился указатель.
+                    // Если больше, чем на 5 единиц, то признаем,
+                    // что это намеренный жест
+                    if (event.type === 'move' && event.distance === 1 && !this._oneTouchZoomStarted) {
+                        var diff = event.targetPoint.y - this._lastEvent.targetPoint.y;
+                        if (Math.abs(diff) > 5) {
+                            this._oneTouchZoomStarted = true;
+                        }
                     }
                 }
 
                 if (this._oneTouchZoomStarted) {
                     if (event.type === 'end') {
                         this._oneTouchZoomStarted = false;
-                        this._oneAndHalfClick = false;
                     }
 
                     if (event.type === 'move') {
