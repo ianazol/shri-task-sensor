@@ -49,7 +49,8 @@ ym.modules.define('shri2017.imageViewer.EventManager', [
             this._removeEventListeners('mousedown', this._elem, this._mouseListener);
             this._removeEventListeners('mousemove mouseup', document.documentElement, this._mouseListener);
             this._removeEventListeners('touchstart touchmove touchend touchcancel', this._elem, this._touchListener);
-            this._removeEventListeners('pointerdown pointermove pointerup pointercancel', this._elem, this._pointerListener);
+            this._removeEventListeners('pointerdown', this._elem, this._pointerListener);
+            this._removeEventListeners('pointermove pointerup pointercancel', document.documentElement, this._pointerListener);
         },
 
         _addEventListeners: function (types, elem, callback) {
