@@ -141,6 +141,11 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
         _scale: function (targetPoint, newScale) {
             var imageSize = this._view.getImageSize();
             var state = this._view.getState();
+            // Проверяем на допустимое значение масштаба
+            newScale = Math.max(Math.min(newScale, MAX_SCALE), MIN_SCALE);
+            if (newScale === state.scale) {
+                return;
+            }
             // Позиция прикосновения на изображении на текущем уровне масштаба
             var originX = targetPoint.x - state.positionX;
             var originY = targetPoint.y - state.positionY;
@@ -153,12 +158,6 @@ ym.modules.define('shri2017.imageViewer.GestureController', [
             // Размер изображения с учетом нового уровня масштаба
             var newImageWidth = imageSize.width * newScale;
             var newImageHeight = imageSize.height * newScale;
-            // Проверяем на допустимое значение масштаба
-            newScale = newScale < MIN_SCALE ? MIN_SCALE : newScale;
-            newScale = newScale > MAX_SCALE ? MAX_SCALE : newScale;
-            if (newScale === state.scale) {
-                return;
-            }
             // Рассчитываем новую позицию с учетом уровня масштаба
             // и относительного положения прикосновения
             state.positionX += originX - (newImageWidth * mx);
